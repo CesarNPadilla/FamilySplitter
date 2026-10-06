@@ -1,6 +1,6 @@
 # Family Splitter
 
-A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–2 provide the development foundation, tested core logic, and database migrations/security. Authentication and expense/payment screens are not implemented yet. No PWA, service worker, or manifest is included. Hosting remains undecided.
+A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–3 provide the development foundation, core logic, database security, and magic-link authentication. Expense tabs/forms and payment screens come in later phases. No PWA, service worker, or manifest is included. Hosting remains undecided.
 
 ## Local setup
 
@@ -12,7 +12,20 @@ cp .env.example .env
 npm run dev
 ```
 
-On PowerShell use `Copy-Item .env.example .env` instead of `cp`. Open the URL printed by Vite. The setup page works without Supabase configuration. Later phases will use the project URL and public anon key; never commit secrets or expose a service-role key in frontend variables.
+On PowerShell use `Copy-Item .env.example .env` instead of `cp`, only when `.env` does not already exist. Fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` using the project URL and **public anon key**. Without configuration, the app shows an unavailable setup state. Never commit secrets or expose a service-role key in frontend variables. Open the URL printed by Vite.
+
+For the local demo, Docker Desktop must be running with Linux containers:
+
+```powershell
+Set-Location C:\dev\FamilySplitter
+npx supabase start
+npm run auth:provision:local
+npm run dev
+```
+
+The Supabase CLI is already a dev dependency. On a new local installation, `npx supabase start` applies the checked-in migrations and seed. If rebuilding an existing disposable local database is needed, `npx supabase db reset --local` erases it and reloads the migrations/seed. Then provision the demo accounts again. `auth:provision:local` creates the five demo Auth users without passwords; it accepts only loopback services and the seed's `member1@example.invalid` through `member5@example.invalid` addresses. It creates no hosted accounts and sends no email.
+
+Get local connection details with `npx supabase status`: copy only the API URL and anon key into `.env`, and restart Vite after configuration changes. At `http://localhost:5173`, request a magic link for `member1@example.invalid`, open the captured message in the local mail inbox at `http://127.0.0.1:54324`, and follow the link. Local emails are captured, not delivered to the reserved demo addresses. Hosted real accounts still require trusted admin provisioning.
 
 ## Checks
 
@@ -31,11 +44,13 @@ npm run test:db
 
 `npm run test:db` requires a running Docker engine with Linux containers. It creates a fresh PostgreSQL 17 container without a published port, applies a minimal test-only Auth contract, the migrations, and demo seed, then runs SQL assertions and removes the container. It does not use or modify a Supabase project. PostgreSQL/Docker are database test runtimes; no npm dependencies were added for Phase 2. CI has a separate database job running this same command.
 
+`npm run test:e2e` uses mocked Auth responses at port 5175, independent of your `.env` or local database. `npm run test:auth:local` is the optional real integration check: it requires the running local Supabase stack, demo seed, Mailpit inbox, and an available Vite port 5173. It verifies captured magic links, member linking, persisted sessions, sign-out, RLS for a pre-existing outsider account, disabled public sign-ups, and no Auth account creation for unknown emails in desktop and mobile Chromium. It provisions temporary fixtures and deletes only accounts it created; existing local accounts are preserved. Only the public URL/key reach Vite. Real auth traces, screenshots, and video are disabled. CI runs the mocked browser suite and SQL suite; the real local Auth suite was verified locally and is not a GitHub CI job yet.
+
 ## Structure
 
-- `src/lib/`: pure split, balance, and money modules; Supabase access comes later.
+- `src/lib/`: pure split/balance/money modules, the Supabase client, and auth helpers/context.
 - `src/i18n/`: English dictionary consumed by components; Spanish can be added later.
-- `src/components/` and `src/pages/`: future shared UI and application pages.
+- `src/components/` and `src/pages/`: auth provider, login, and the protected dashboard placeholder.
 - `supabase/migrations/` and `supabase/seed.sql`: schema, security RPCs, and local demo data.
 - `tests/unit/`, `tests/e2e/`, and `tests/database/`: Vitest, Playwright, and SQL checks.
 
@@ -94,12 +109,12 @@ Changing the amount, participant set, custom allocation, percentage weights, spl
 
 ### Apply and provision
 
-1. For a **local Supabase stack**, install the Supabase CLI using its documented platform instructions, then run `supabase start` and `supabase db reset` from this folder. Reset recreates the local database and loads demo seed; use it only for disposable local data. The optional CLI is not required for `npm run test:db`.
+1. For a **local Supabase stack**, use the project's CLI dependency with `npx supabase start` from this folder. To rebuild disposable local data, run `npx supabase db reset --local`. Reset recreates the local database and loads demo seed; use it only for disposable local data. The CLI is not required for `npm run test:db`.
 2. For a **hosted project**, apply `supabase/migrations/20261006000100_family_expenses.sql` as the migration owner using your chosen migration process or the SQL editor. Do not run `tests/database/bootstrap.sql` on Supabase: it is exclusively a disposable PostgreSQL test fixture. Do not apply the demo seed to production.
 3. Insert the five real member names/emails using trusted admin SQL. Store emails lowercase and trimmed. Do not expose an allowlist query on the login screen. `supabase/seed.sql` uses reserved `example.invalid` emails and creates no Auth users.
-4. Disable public sign-ups and anonymous sign-ins in hosted Auth settings, and leave email confirmation enabled. The checked-in `supabase/config.toml` disables local general/email/SMS sign-ups and anonymous sign-ins; it does **not** configure a hosted project. See [Supabase configuration](https://supabase.com/docs/guides/local-development/cli/config).
+4. Disable public sign-ups and anonymous sign-ins in hosted Auth settings, keep the email provider enabled, and leave email confirmation enabled. Locally, `auth.enable_signup = false` blocks public sign-ups. **Keep `auth.email.enable_signup = true`**: the installed CLI maps this field to `GOTRUE_EXTERNAL_EMAIL_ENABLED`; setting it false disables email OTP sign-in as well. The local integration test verifies that `/signup` is rejected while magic links work. SMS and anonymous sign-ins are disabled. `supabase/config.toml` does **not** configure hosted settings. See [Supabase configuration](https://supabase.com/docs/guides/local-development/cli/config). If changing local Auth settings, stop/start the stack to apply them without resetting its data.
 5. Pre-provision only the allowlisted emails through a trusted server/admin operation, such as [`auth.admin.createUser`](https://supabase.com/docs/reference/javascript/auth-admin-createuser) with the email, no password, and `email_confirm: true` after checking the administrator-provided address. Use an admin credential only outside the browser. The first magic link will prove email access before the browser receives a session. A `members` row alone is insufficient for `shouldCreateUser: false` to sign in.
-6. In Phase 3, call `signInWithOtp` with `shouldCreateUser: false`, show a generic login response, then call `link_current_member` after receiving the session. This function only binds an unlinked member row whose email matches the confirmed email in `auth.users`; it never trusts submitted emails, JWT email claims, or editable user metadata. Until linking succeeds, the session cannot read app data. Repeat linking is harmless; an email already linked to another Auth ID is rejected. Account removal clears its member link through the FK; reassignment of an existing identity must be an intentional admin operation.
+6. The Phase 3 app calls `signInWithOtp` with `shouldCreateUser: false`, shows a generic login response, then calls `link_current_member` after verifying the session. This function only binds an unlinked member row whose email matches the confirmed email in `auth.users`; it never trusts submitted emails, JWT email claims, or editable user metadata. Until linking succeeds, the session cannot read app data. Repeat linking is harmless; an email already linked to another Auth ID is rejected. Account removal clears its member link through the FK; reassignment of an existing identity must be an intentional admin operation.
 
 Redirect URLs, custom SMTP, and deployment remain later-phase work. No hosted project settings or data were changed during Phase 2.
 
@@ -109,15 +124,27 @@ Run `npm run test:db`. The executable assertions in `tests/database/security.sql
 
 The tests prove: no anonymous/non-member reads; member access only after verified linking; no allowlist mutation or identity takeover; payors cannot confirm for payees; payees cannot mark for another payor; unrelated members cannot edit/delete or confirm; direct share and flag mutations fail; both confirmations are required; each financial edit condition resets flags; metadata-only edits preserve them; old IDs fail; creator/payee deletion works and cascades; duplicate shares and invalid amounts/sums/currencies fail; and both rounding rules reproduce the examples. Deferred constraints are explicitly flushed before rollback. The harness also simulates permissive default API-role grants to ensure the migration closes them.
 
-These policies/RPCs are verified locally on PostgreSQL 17. A full hosted Supabase Auth/PostgREST smoke test and real magic-link delivery remain Phase 3/integration validation; the local SQL harness does not establish hosted configuration or GitHub CI status.
+These policies/RPCs are verified locally on PostgreSQL 17 and against the local Supabase Auth/PostgREST stack in Phase 3. Hosted Auth settings, real email delivery, and hosted integration remain unverified. Neither local suite establishes GitHub CI status.
+
+## Authentication (Phase 3)
+
+The only login form is email magic link; there are no password or public registration screens. Email input is trimmed/lowercased and sent through [`signInWithOtp`](https://supabase.com/docs/reference/javascript/auth-signinwithotp) with `shouldCreateUser: false`. Known/unknown emails, provider errors, and transport failures receive the same generic response. The login page never queries the members table or discloses registration status.
+
+The SDK persists sessions and refreshes tokens. It processes the standard SPA magic-link URL response; the requested redirect is the current site origin. Configure that exact origin in the Supabase redirect allowlist for each environment. Session restoration and every new token first call `getUser` for server verification, then link the member and read their matching row. Only a verified member renders the protected `/dashboard`; anonymous and denied sessions resolve to `/login`. Root and callback visits follow the same guard. The dashboard is an authenticated placeholder until Phase 4.
+
+Auth-state callbacks schedule database requests outside the SDK Auth lock, following [Supabase callback guidance](https://supabase.com/docs/reference/javascript/auth-onauthstatechange). Request generations prevent late membership results from restoring protected content after sign-out or a session change. Invalid links get a dictionary-based recovery message, transient membership errors get retry, and sign-out clears this browser's SDK session (including its other tabs). It does not sign out other devices. No privileged key enters the frontend. Backend RLS/RPC checks remain authoritative even if a browser manipulates local storage or the URL.
+
+The real local test deliberately provisions outsider Auth fixtures through the admin API to prove they still cannot enter the app or read expense rows. Normal provisioning must create only allowlisted family accounts. All visible component text comes from the English dictionary. Hosting and custom SMTP remain Phase 6 decisions/work.
 
 ## Review workflow
 
-One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, and Phase 2 on `phase-2-database-security`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
+One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, and Phase 3 on `phase-3-auth`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
 
 ## Dependency purposes
 
 - React and React DOM: component rendering.
+- `@supabase/supabase-js`: magic-link authentication, session persistence/refresh, and member RPC access.
+- Supabase CLI (dev only): local service management and migrations; added during local setup after Phase 2.
 - Vite and its React plugin: development server and production bundling.
 - TypeScript and Node/React type packages: static checks for application and tool configuration.
 - Tailwind CSS and its Vite plugin: requested responsive styling.

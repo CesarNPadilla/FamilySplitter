@@ -4,8 +4,27 @@
     "title": "Family Splitter",
     "description": "A shared space for five family members to track travel and property expenses, with separate USD and MXN balances."
   },
-  "setup": {
-    "title": "The foundation is ready",
-    "description": "Expense splitting, email sign-in, and payment confirmations are coming in the next phases."
+  "auth": {
+    "loginTitle": "Sign in to your family",
+    "loginDescription": "Use your family email address to receive a magic link. No password needed.",
+    "emailLabel": "Email address",
+    "sendLink": "Send sign-in link",
+    "sending": "Sending…",
+    "genericResponse": "If this email is registered with your family, a sign-in link will arrive shortly.",
+    "loading": "Checking your sign-in…",
+    "unconfiguredTitle": "Sign-in is not configured yet",
+    "unconfigured": "Please contact the person setting up your family’s account.",
+    "invalidLink": "This sign-in link is invalid or has expired. Request a new link.",
+    "denied": "This account cannot access the family. Sign out and use your registered family email.",
+    "unavailable": "We could not check your family access. Try again.",
+    "retry": "Try again",
+    "signedInAs": "Signed in as",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…",
+    "signOutFailed": "We could not sign you out. Please try again."
+  },
+  "dashboard": {
+    "title": "Your family space",
+    "pending": "You are signed in. Shared expense tabs and expense forms will be added in the next phase."
   }
 }

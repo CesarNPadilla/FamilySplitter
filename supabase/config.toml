@@ -24,7 +24,9 @@ enable_signup = false
 enable_anonymous_sign_ins = false
 
 [auth.email]
-enable_signup = false
+# The CLI maps this flag to the email-provider switch; keep it enabled for OTP.
+# auth.enable_signup above is the public signup gate and remains false.
+enable_signup = true
 enable_confirmations = true
 double_confirm_changes = true
 

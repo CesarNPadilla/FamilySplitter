@@ -4,5 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  test: { include: ['tests/unit/**/*.test.ts'], environment: 'node' },
+  test: {
+    include: ['tests/unit/**/*.test.ts'],
+    environment: 'node',
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' },
+  },
 });

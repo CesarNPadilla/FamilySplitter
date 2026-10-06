@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { messages } from '../../src/i18n';
 
-test('setup page renders without horizontal overflow in light and dark mode', async ({
+test('login page renders without horizontal overflow in light and dark mode', async ({
   page,
 }) => {
   await page.goto('/');
@@ -9,7 +9,7 @@ test('setup page renders without horizontal overflow in light and dark mode', as
     page.getByRole('heading', { name: messages.app.title, exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: messages.setup.title }),
+    page.getByRole('heading', { name: messages.auth.loginTitle }),
   ).toBeVisible();
   expect(
     await page.evaluate(

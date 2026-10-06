@@ -12,7 +12,9 @@
     "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:db": "node scripts/test-database.mjs"
+    "test:db": "node scripts/test-database.mjs",
+    "test:auth:local": "node scripts/test-auth-local.mjs",
+    "auth:provision:local": "node scripts/provision-local-members.mjs"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
