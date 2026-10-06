@@ -6,6 +6,6 @@ dist/
 playwright-report/
 test-results/
 *.local
-supabase/production-members.local.sql
+supabase/production-members.local.*
 supabase/.temp/
 supabase/.branches/
