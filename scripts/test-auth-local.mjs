@@ -113,6 +113,24 @@ try {
   );
   process.exitCode = 1;
 } finally {
+  if (admin) {
+    // Remove only this run's expense/tab fixtures, even after a failed assertion.
+    try {
+      const rows = await admin(
+        `/rest/v1/expenses?select=id&description=like.phase4-${runId}-%`,
+      );
+      for (const row of rows)
+        await admin(`/rest/v1/expenses?id=eq.${row.id}`, 'DELETE');
+      const tabs = await admin(
+        `/rest/v1/expense_tabs?select=id&name=like.phase4-${runId}-%`,
+      );
+      for (const tab of tabs)
+        await admin(`/rest/v1/expense_tabs?id=eq.${tab.id}`, 'DELETE');
+    } catch {
+      console.error('Could not clean up local expense fixtures.');
+      process.exitCode = 1;
+    }
+  }
   if (admin)
     for (const id of new Set(created)) {
       try {

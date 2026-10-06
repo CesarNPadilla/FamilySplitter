@@ -1,6 +1,6 @@
 # Family Splitter
 
-A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–3 provide the development foundation, core logic, database security, and magic-link authentication. Expense tabs/forms and payment screens come in later phases. No PWA, service worker, or manifest is included. Hosting remains undecided.
+A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–4 provide the development foundation, core logic, database security, magic-link authentication, and expense tabs/forms. Payment confirmation screens come in Phase 5. No PWA, service worker, or manifest is included. Hosting remains undecided.
 
 ## Local setup
 
@@ -44,13 +44,13 @@ npm run test:db
 
 `npm run test:db` requires a running Docker engine with Linux containers. It creates a fresh PostgreSQL 17 container without a published port, applies a minimal test-only Auth contract, the migrations, and demo seed, then runs SQL assertions and removes the container. It does not use or modify a Supabase project. PostgreSQL/Docker are database test runtimes; no npm dependencies were added for Phase 2. CI has a separate database job running this same command.
 
-`npm run test:e2e` uses mocked Auth responses at port 5175, independent of your `.env` or local database. `npm run test:auth:local` is the optional real integration check: it requires the running local Supabase stack, demo seed, Mailpit inbox, and an available Vite port 5173. It verifies captured magic links, member linking, persisted sessions, sign-out, RLS for a pre-existing outsider account, disabled public sign-ups, and no Auth account creation for unknown emails in desktop and mobile Chromium. It provisions temporary fixtures and deletes only accounts it created; existing local accounts are preserved. Only the public URL/key reach Vite. Real auth traces, screenshots, and video are disabled. CI runs the mocked browser suite and SQL suite; the real local Auth suite was verified locally and is not a GitHub CI job yet.
+`npm run test:e2e` uses mocked Auth/database responses at port 5175, independent of your `.env` or local database. `npm run test:auth:local` is the optional real integration check: it requires the running local Supabase stack, demo seed, Mailpit inbox, and an available Vite port 5173. It verifies captured magic links, member linking, persisted sessions, sign-out, RLS for a pre-existing outsider account, disabled public sign-ups, and no Auth account creation for unknown emails in desktop and mobile Chromium. Phase 4 extends it with real tab creation, expense add/edit/delete, both spreadsheet examples, payer-excluded rounding, custom amounts, and exact percentage edit prefills. It provisions temporary fixtures and deletes only accounts it created plus expense/tab fixtures with this run's unique prefix; existing local data is preserved. Only the public URL/key reach Vite. Real auth traces, screenshots, and video are disabled. CI runs the mocked browser suite and SQL suite; the real local integration suite was verified locally and is not a GitHub CI job yet. Stop any preview server using port 5173 before running it. Repeated login requests for the same demo email are subject to the local Auth cooldown; wait at least 60 seconds before immediate reruns.
 
 ## Structure
 
 - `src/lib/`: pure split/balance/money modules, the Supabase client, and auth helpers/context.
 - `src/i18n/`: English dictionary consumed by components; Spanish can be added later.
-- `src/components/` and `src/pages/`: auth provider, login, and the protected dashboard placeholder.
+- `src/components/` and `src/pages/`: auth provider, login, dashboard, tab view, and shared expense editor/cards.
 - `supabase/migrations/` and `supabase/seed.sql`: schema, security RPCs, and local demo data.
 - `tests/unit/`, `tests/e2e/`, and `tests/database/`: Vitest, Playwright, and SQL checks.
 
@@ -130,15 +130,27 @@ These policies/RPCs are verified locally on PostgreSQL 17 and against the local 
 
 The only login form is email magic link; there are no password or public registration screens. Email input is trimmed/lowercased and sent through [`signInWithOtp`](https://supabase.com/docs/reference/javascript/auth-signinwithotp) with `shouldCreateUser: false`. Known/unknown emails, provider errors, and transport failures receive the same generic response. The login page never queries the members table or discloses registration status.
 
-The SDK persists sessions and refreshes tokens. It processes the standard SPA magic-link URL response; the requested redirect is the current site origin. Configure that exact origin in the Supabase redirect allowlist for each environment. Session restoration and every new token first call `getUser` for server verification, then link the member and read their matching row. Only a verified member renders the protected `/dashboard`; anonymous and denied sessions resolve to `/login`. Root and callback visits follow the same guard. The dashboard is an authenticated placeholder until Phase 4.
+The SDK persists sessions and refreshes tokens. It processes the standard SPA magic-link URL response; the requested redirect is the current site origin. Configure that exact origin in the Supabase redirect allowlist for each environment. Session restoration and every new token first call `getUser` for server verification, then link the member and read their matching row. Only a verified member renders protected pages; anonymous and denied sessions resolve to `/login`. Root and callback visits follow the same guard.
 
 Auth-state callbacks schedule database requests outside the SDK Auth lock, following [Supabase callback guidance](https://supabase.com/docs/reference/javascript/auth-onauthstatechange). Request generations prevent late membership results from restoring protected content after sign-out or a session change. Invalid links get a dictionary-based recovery message, transient membership errors get retry, and sign-out clears this browser's SDK session (including its other tabs). It does not sign out other devices. No privileged key enters the frontend. Backend RLS/RPC checks remain authoritative even if a browser manipulates local storage or the URL.
 
 The real local test deliberately provisions outsider Auth fixtures through the admin API to prove they still cannot enter the app or read expense rows. Normal provisioning must create only allowlisted family accounts. All visible component text comes from the English dictionary. Hosting and custom SMTP remain Phase 6 decisions/work.
 
+## Tabs and expenses (Phase 4)
+
+After signing in, the dashboard lists shared tabs and lets members create a tab. Open a tab to see its expenses and each participant's exact share in that expense's currency. Add an expense with a description, decimal amount, USD/MXN currency, and the member who paid. Equal splitting is the default; select participants using large checkbox labels. A participant appears only once, and selecting the person who paid is optional. The live preview shows exact per-person amounts and the total before saving. Invalid amounts, missing participants, non-matching custom totals, and percentage totals other than 100 disable saving with English dictionary guidance.
+
+Custom amounts are entered as decimal currency values and parsed to integer cents. Percentages remain decimal strings. Saved percentages are selected using PostgREST's [`percentage::text` column cast](https://postgrest.org/en/stable/references/api/tables_views.html#casting-columns), preserving long fractional inputs when reopening an editor; no schema change was needed. Expense/share rows are read with a single embedded query so one response contains the expense and its shares from the same database snapshot. Writes use only `create_expense_tab`, `save_expense`, and `delete_expense`; payment flags are never submitted by the form.
+
+Edit/delete controls are shown only to the creator or the member who paid, and manually opening an unauthorized edit URL displays a denial. RPCs recheck permissions if the record changes while a form is open. Edit forms prefill all selected participants and stored allocations, and warn that financial changes restart confirmation under the Phase 2 rules. Deleting requires an explicit inline confirmation. Failed saves preserve inputs for retry; list failures have retry controls, and empty tabs explain how to add the first expense.
+
+Protected routes are `/dashboard`, `/tabs/:tabId`, `/tabs/:tabId/new`, and `/tabs/:tabId/expenses/:expenseId/edit`. Navigation uses browser history with real link URLs, including back/forward, deep links, and reloads. Auth restoration retains the requested protected path after member verification. No routing or other dependency was added.
+
+Verified examples: `Disney universal`, USD 2,000.00 split between two members produces USD 1,000.00 each; `House title`, MXN 3,000.00 split between three members produces MXN 1,000.00 each. USD 100.00 among three participants with the payer excluded yields USD 33.34 / 33.33 / 33.33 in stable member-ID order. The local desktop/mobile suite adds these examples through the real form, reloads saved data, edits splits, and deletes its fixtures. The mocked suite also checks duplicate selection prevention, invalid custom/percentage inputs, denied edits, changed permissions at save time, deletion cancellation, error retry, and mobile overflow/touch-target sizes. Payment buttons, status pills, and balance/settle screens remain Phase 5 work.
+
 ## Review workflow
 
-One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, and Phase 3 on `phase-3-auth`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
+One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, Phase 3 on `phase-3-auth`, and Phase 4 on `phase-4-tabs-expenses`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
 
 ## Dependency purposes
 

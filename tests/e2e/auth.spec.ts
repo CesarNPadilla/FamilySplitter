@@ -39,6 +39,9 @@ async function session(page: Page) {
 }
 
 async function memberApi(page: Page, denied = false) {
+  await page.route('**/rest/v1/expense_tabs?**', (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.route('**/auth/v1/user', (route) => route.fulfill({ json: user }));
   await page.route('**/rest/v1/rpc/link_current_member', (route) =>
     route.fulfill(

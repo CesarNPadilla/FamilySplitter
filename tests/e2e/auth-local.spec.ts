@@ -59,7 +59,7 @@ async function requestAndFollow(
   await page.goto(destination);
 }
 
-test('real magic link, linking, persistence, sign-out, and outsider denial', async ({
+test('real auth, expense CRUD, exact splits, persistence, and outsider denial', async ({
   page,
   request,
 }, testInfo) => {
@@ -91,6 +91,8 @@ test('real magic link, linking, persistence, sign-out, and outsider denial', asy
   await expect(
     page.getByRole('heading', { name: messages.dashboard.title }),
   ).toBeVisible();
+  // Exercise real expense reads/writes before signing out (Phase 4).
+  await verifyExpenses(page, testInfo.project.name);
   await page
     .getByRole('button', { name: messages.auth.signOut, exact: true })
     .click();
@@ -137,3 +139,180 @@ test('real magic link, linking, persistence, sign-out, and outsider denial', asy
     page.getByRole('heading', { name: messages.auth.loginTitle }),
   ).toBeVisible();
 });
+
+async function verifyExpenses(page: Page, project: string) {
+  const travelId = '00000000-0000-0000-0000-000000000101';
+  const propertyId = '00000000-0000-0000-0000-000000000102';
+  const cases = [
+    {
+      tabId: travelId,
+      title: 'Disney universal',
+      amount: '2000.00',
+      currency: 'USD',
+      count: 2,
+    },
+    {
+      tabId: propertyId,
+      title: 'House title',
+      amount: '3000.00',
+      currency: 'MXN',
+      count: 3,
+    },
+  ];
+  for (const example of cases) {
+    const title = `phase4-${process.env.TEST_RUN_ID}-${project}-${example.title}`;
+    await page.goto(`/tabs/${example.tabId}/new`);
+    await page
+      .getByLabel(messages.expenses.description, { exact: true })
+      .fill(title);
+    await page
+      .getByLabel(messages.expenses.amount, { exact: true })
+      .fill(example.amount);
+    await page
+      .getByLabel(messages.expenses.currency, { exact: true })
+      .selectOption(example.currency);
+    await page
+      .getByLabel(messages.expenses.paidBy, { exact: true })
+      .selectOption('00000000-0000-0000-0000-000000000001');
+    for (let index = 1; index <= 5; index++)
+      await page
+        .getByRole('checkbox', { name: `Member ${index}`, exact: true })
+        .setChecked(index <= example.count);
+    await expect(
+      page
+        .getByRole('list', { name: messages.expenses.preview })
+        .getByText(`${example.currency} 1,000.00`, { exact: true }),
+    ).toHaveCount(example.count);
+    await page
+      .getByRole('button', { name: messages.expenses.save, exact: true })
+      .click();
+    const card = page.getByRole('article', { name: title });
+    await expect(card).toBeVisible();
+    await expect(
+      card
+        .getByRole('list', { name: messages.expenses.shares })
+        .getByText(`${example.currency} 1,000.00`, { exact: true }),
+    ).toHaveCount(example.count);
+    await page.reload();
+    await expect(card).toBeVisible();
+    if (example.currency === 'USD') {
+      await card.getByRole('link', { name: messages.expenses.edit }).click();
+      await page
+        .getByLabel(messages.expenses.amount, { exact: true })
+        .fill('100.00');
+      await page
+        .getByRole('checkbox', { name: 'Member 1', exact: true })
+        .uncheck();
+      await page
+        .getByRole('checkbox', { name: 'Member 3', exact: true })
+        .check();
+      await page
+        .getByRole('checkbox', { name: 'Member 4', exact: true })
+        .check();
+      await expect(
+        page
+          .getByRole('list', { name: messages.expenses.preview })
+          .getByText('USD 33.34'),
+      ).toHaveCount(1);
+      await expect(
+        page
+          .getByRole('list', { name: messages.expenses.preview })
+          .getByText('USD 33.33'),
+      ).toHaveCount(2);
+      await page
+        .getByRole('button', { name: messages.expenses.saveChanges })
+        .click();
+      await expect(
+        card
+          .getByRole('list', { name: messages.expenses.shares })
+          .getByText('USD 33.34'),
+      ).toHaveCount(1);
+      await expect(
+        card
+          .getByRole('list', { name: messages.expenses.shares })
+          .getByText('USD 33.33'),
+      ).toHaveCount(2);
+    }
+    await card
+      .getByRole('button', { name: messages.expenses.delete, exact: true })
+      .click();
+    await card
+      .getByRole('button', { name: messages.expenses.confirmDelete })
+      .click();
+    await expect(card).toHaveCount(0);
+  }
+  // High-precision percentage strings survive PostgREST reads and edit prefills.
+  const title = `phase4-${process.env.TEST_RUN_ID}-${project}-precision`;
+  await page.goto(`/tabs/${travelId}/new`);
+  await page
+    .getByLabel(messages.expenses.description, { exact: true })
+    .fill(title);
+  await page
+    .getByLabel(messages.expenses.amount, { exact: true })
+    .fill('100.00');
+  await page.getByLabel(messages.expenses.splitMode).selectOption('percentage');
+  await page.getByRole('checkbox', { name: 'Member 1', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Member 2', exact: true }).check();
+  await page
+    .getByLabel('Member 1 percentage (%)', { exact: true })
+    .fill('99.999999999999999999');
+  await page
+    .getByLabel('Member 2 percentage (%)', { exact: true })
+    .fill('0.000000000000000001');
+  await page
+    .getByRole('button', { name: messages.expenses.save, exact: true })
+    .click();
+  const card = page.getByRole('article', { name: title });
+  await card.getByRole('link', { name: messages.expenses.edit }).click();
+  await expect(
+    page.getByLabel('Member 1 percentage (%)', { exact: true }),
+  ).toHaveValue('99.999999999999999999');
+  await expect(
+    page.getByLabel('Member 2 percentage (%)', { exact: true }),
+  ).toHaveValue('0.000000000000000001');
+  await page.getByLabel(messages.expenses.splitMode).selectOption('custom');
+  await page.getByLabel('Member 1 amount', { exact: true }).fill('75.00');
+  await page.getByLabel('Member 2 amount', { exact: true }).fill('25.00');
+  await expect(
+    page.getByRole('list', { name: messages.expenses.preview }),
+  ).toContainText('USD 75.00');
+  await page
+    .getByRole('button', { name: messages.expenses.saveChanges })
+    .click();
+  await expect(
+    card.getByRole('list', { name: messages.expenses.shares }),
+  ).toContainText('USD 75.00');
+  await expect(
+    card.getByRole('list', { name: messages.expenses.shares }),
+  ).toContainText('USD 25.00');
+  await card.getByRole('link', { name: messages.expenses.edit }).click();
+  await expect(page.getByLabel('Member 1 amount', { exact: true })).toHaveValue(
+    '75.00',
+  );
+  await expect(page.getByLabel('Member 2 amount', { exact: true })).toHaveValue(
+    '25.00',
+  );
+  await page.getByRole('link', { name: messages.expenses.cancel }).click();
+  await card
+    .getByRole('button', { name: messages.expenses.delete, exact: true })
+    .click();
+  await card
+    .getByRole('button', { name: messages.expenses.confirmDelete })
+    .click();
+  await expect(card).toHaveCount(0);
+  // New tabs use the existing membership-checked RPC.
+  await page.getByRole('link', { name: messages.expenses.backToTabs }).click();
+  const tabName = `phase4-${process.env.TEST_RUN_ID}-${project}-tab`;
+  await page.getByLabel(messages.dashboard.newTab).fill(tabName);
+  await page
+    .getByRole('button', { name: messages.dashboard.createTab })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: tabName, exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(messages.expenses.empty)).toBeVisible();
+  await page.getByRole('link', { name: messages.expenses.backToTabs }).click();
+  await expect(
+    page.getByRole('heading', { name: messages.dashboard.title }),
+  ).toBeVisible();
+}

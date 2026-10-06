@@ -7,6 +7,9 @@
   .field {
     @apply min-h-12 w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base dark:border-slate-500 dark:bg-slate-950;
   }
+  .form-label {
+    @apply mb-2 block font-medium;
+  }
   .primary-button {
     @apply min-h-12 rounded-lg bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60 dark:bg-teal-300 dark:text-slate-950 dark:hover:bg-teal-200;
   }
@@ -15,6 +18,10 @@
   }
   button:focus-visible,
   input:focus-visible {
+    @apply outline-2 outline-offset-4 outline-teal-600 dark:outline-teal-300;
+  }
+  a:focus-visible,
+  select:focus-visible {
     @apply outline-2 outline-offset-4 outline-teal-600 dark:outline-teal-300;
   }
 }

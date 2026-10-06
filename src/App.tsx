@@ -4,9 +4,15 @@ import { messages } from './i18n';
 import { useAuth } from './lib/auth-context';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
+import { navigate, parseRoute, usePath } from './lib/navigation';
+import { TabView } from './pages/TabView';
+import { AddExpense } from './pages/AddExpense';
+import { AppLink } from './components/AppLink';
 
 function AuthRoutes() {
   const { state, signOut, retry } = useAuth();
+  const path = usePath();
+  const route = parseRoute(path);
   const [signingOut, setSigningOut] = useState(false);
   const [signOutFailed, setSignOutFailed] = useState(false);
   const [invalidLink] = useState(
@@ -17,9 +23,10 @@ function AuthRoutes() {
   );
   useEffect(() => {
     if (state.status === 'loading' || state.status === 'unconfigured') return;
-    const path = state.status === 'ready' ? '/dashboard' : '/login';
-    window.history.replaceState(null, '', path);
-  }, [state.status]);
+    if (state.status !== 'ready') navigate('/login', true);
+    else if (['/', '/login', '/auth/callback'].includes(path))
+      navigate('/dashboard', true);
+  }, [state.status, path]);
   const handleSignOut = async () => {
     setSigningOut(true);
     setSignOutFailed(false);
@@ -50,7 +57,24 @@ function AuthRoutes() {
         </section>
       )}
       {state.status === 'anonymous' && <Login invalidLink={invalidLink} />}
-      {state.status === 'ready' && <Dashboard member={state.member} />}
+      {state.status === 'ready' &&
+        (route.page === 'dashboard' ? (
+          <Dashboard key={path} member={state.member} />
+        ) : route.page === 'tab' ? (
+          <TabView key={path} tabId={route.tabId} actorId={state.member.id} />
+        ) : route.page === 'add' || route.page === 'edit' ? (
+          <AddExpense
+            key={path}
+            tabId={route.tabId}
+            actorId={state.member.id}
+            expenseId={route.page === 'edit' ? route.expenseId : undefined}
+          />
+        ) : (
+          <section className="panel">
+            <p>{messages.expenses.notFound}</p>
+            <AppLink to="/dashboard">{messages.expenses.backToTabs}</AppLink>
+          </section>
+        ))}
       {(state.status === 'denied' || state.status === 'error') && (
         <section className="panel">
           <p role="alert">
