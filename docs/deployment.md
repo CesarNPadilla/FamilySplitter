@@ -4,7 +4,7 @@ The intended production address is `https://cesarnpadilla.github.io/FamilySplitt
 
 ## GitHub setup
 
-Merge the approved phases into the repository's default branch. The deployment workflow uses the repository's actual default branch rather than assuming `main`. You can also dispatch **Deploy GitHub Pages** manually on that branch. Runs from other branches skip deployment.
+The repository now has a single `main` branch. Commit and push future updates to `main`. The deployment workflow uses the repository's actual default branch rather than assuming `main`. You can also dispatch **Deploy GitHub Pages** manually on that branch. Runs from other branches skip deployment.
 
 In the repository's **Settings → Pages**, select **GitHub Actions** as the source. Under **Settings → Secrets and variables → Actions → Variables**, add:
 
