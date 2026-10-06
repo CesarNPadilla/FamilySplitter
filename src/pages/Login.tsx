@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { messages } from '../i18n';
 import { requestMagicLink } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import { siteHref } from '../lib/site-path';
 
 export function Login({ invalidLink = false }: { invalidLink?: boolean }) {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ export function Login({ invalidLink = false }: { invalidLink?: boolean }) {
     await requestMagicLink(
       supabase,
       email,
-      new URL('/', window.location.origin).href,
+      new URL(siteHref('/'), window.location.origin).href,
     );
     setSending(false);
     setSent(true);
@@ -55,7 +56,12 @@ export function Login({ invalidLink = false }: { invalidLink?: boolean }) {
           }}
           className="field"
         />
-        <button type="submit" disabled={sending} className="primary-button">
+        <button
+          lang="es"
+          type="submit"
+          disabled={sending}
+          className="primary-button"
+        >
           {sending ? messages.auth.sending : messages.auth.sendLink}
         </button>
         {sent && <p role="status">{messages.auth.genericResponse}</p>}

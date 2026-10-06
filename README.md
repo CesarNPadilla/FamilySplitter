@@ -1,6 +1,6 @@
 # Family Splitter
 
-A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–4 provide the development foundation, core logic, database security, magic-link authentication, expense tabs/forms, and two-step payment confirmation with per-currency balances. No PWA, service worker, or manifest is included. Hosting remains undecided.
+A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–5 provide the development foundation, core logic, database security, magic-link authentication, expense tabs/forms, and two-step payment confirmation with per-currency balances. No PWA, service worker, or manifest is included. GitHub Pages is the chosen host; Phase 6 deployment preparation is in progress. See [deployment instructions](docs/deployment.md).
 
 ## Local setup
 
@@ -38,6 +38,7 @@ npm run build
 npx playwright install chromium
 npm run test:e2e
 npm run test:db
+npm run test:pages
 ```
 
 `npm run test:watch` runs unit tests interactively. `npm run format` formats the project. `npm run preview` serves the production build locally. GitHub Actions runs all checks plus Chromium smoke tests at desktop and mobile sizes. CI results become available after you push this branch and open a PR.
@@ -158,11 +159,19 @@ Tab pages show your outstanding balances for that tab, separately in USD and MXN
 
 After a successful action the current page reloads its balances and statuses. **Refresh payments** or a browser reload fetches changes made by another member; live subscriptions are outside this phase. Failed actions retain a retryable button and show a message. Permission/stale-share failures advise reloading the latest shares. Financial edits still recreate shares and reset confirmations through the existing expense RPC.
 
-The desktop/mobile mocked suite checks action permissions, errors, status transitions, self shares, reloads, currency separation, and removal of settled items. `npm run test:auth:local` also signs in two distinct members in separate browser contexts on each viewport: one creates and marks a USD 12.34 obligation, the recipient signs in by magic link and confirms it from Settle up, and the payor refreshes to see Settled. It deletes only its uniquely named expense afterward. The test runner provisions demo members 1�4 if missing and removes only accounts it created.
+The desktop/mobile mocked suite checks action permissions, errors, status transitions, self shares, reloads, currency separation, and removal of settled items. `npm run test:auth:local` also signs in two distinct members in separate browser contexts on each viewport: one creates and marks a USD 12.34 obligation, the recipient signs in by magic link and confirms it from Settle up, and the payor refreshes to see Settled. It deletes only its uniquely named expense afterward. The test runner provisions demo members 1 through 4 if missing and removes only accounts it created.
+
+## Polish and deployment (Phase 6)
+
+Mobile panels use tighter padding at narrow widths, text wraps for long labels, and Spanish header text has language annotations. Existing loading, empty, error, and retry states remain dictionary-driven; Spanish actions coexist with the English informational UI. The backend stays in English.
+
+GitHub Pages builds use `/FamilySplitter/`, including navigation and magic-link redirects. The build includes the static 404 fallback for nested routes; those initial HTTP requests return 404 while the app renders normally. `npm run test:pages` tests the production output under that base at desktop/mobile sizes. GitHub CI and the deployment workflow include this suite alongside existing checks. No dependencies or schema changes were introduced.
+
+[Deployment instructions](docs/deployment.md) cover repository variables, Pages settings, real Supabase members, the exact redirect URL, SMTP, and live verification. The local preparation can be reviewed now; the full phase remains incomplete until production settings are supplied, the workflow is green, and the live URL is verified on desktop and a phone.
 
 ## Review workflow
 
-One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, Phase 3 on `phase-3-auth`, Phase 4 on `phase-4-tabs-expenses`, and Phase 5 on `phase-5-payment-confirmation`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
+One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, Phase 3 on `phase-3-auth`, Phase 4 on `phase-4-tabs-expenses`, Phase 5 on `phase-5-payment-confirmation`, and Phase 6 on `phase-6-polish-deploy`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
 
 ## Dependency purposes
 

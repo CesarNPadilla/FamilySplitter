@@ -301,7 +301,11 @@ export function ExpenseForm({
       </section>
       {saveError && <p role="alert">{saveError}</p>}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button className="primary-button flex-1" disabled={!preview || saving}>
+        <button
+          lang="es"
+          className="primary-button flex-1"
+          disabled={!preview || saving}
+        >
           {saving
             ? messages.expenses.saving
             : expense

@@ -73,7 +73,11 @@ export function Dashboard({ member }: { member: Member }) {
           disabled={saving}
           onChange={(event) => setName(event.target.value)}
         />
-        <button className="primary-button" disabled={!name.trim() || saving}>
+        <button
+          lang="es"
+          className="primary-button"
+          disabled={!name.trim() || saving}
+        >
           {saving ? messages.expenses.saving : messages.dashboard.createTab}
         </button>
         {failed && <p role="alert">{messages.dashboard.createFailed}</p>}

@@ -14,7 +14,9 @@
     "format:check": "prettier --check .",
     "test:db": "node scripts/test-database.mjs",
     "test:auth:local": "node scripts/test-auth-local.mjs",
-    "auth:provision:local": "node scripts/provision-local-members.mjs"
+    "auth:provision:local": "node scripts/provision-local-members.mjs",
+    "build:pages": "npm run build -- --base=/FamilySplitter/ && node scripts/prepare-pages.mjs",
+    "test:pages": "node scripts/test-pages.mjs"
   },
   "repository": {
     "type": "git",

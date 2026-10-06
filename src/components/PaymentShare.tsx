@@ -64,6 +64,7 @@ export function PaymentShare({
       </span>
       {action && (
         <button
+          lang="es"
           className="secondary-button"
           disabled={busy}
           onClick={() => void submit()}

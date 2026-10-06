@@ -12,7 +12,7 @@ export function ResourceNotice({
   ) : (
     <div className="panel">
       <p role="alert">{messages.expenses.loadFailed}</p>
-      <button className="secondary-button mt-4" onClick={retry}>
+      <button lang="es" className="secondary-button mt-4" onClick={retry}>
         {messages.auth.retry}
       </button>
     </div>

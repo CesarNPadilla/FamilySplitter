@@ -30,7 +30,7 @@ export function Settle({ actorId }: { actorId: string }) {
       <AppLink to="/dashboard">{messages.expenses.backToTabs}</AppLink>
       <h2 className="text-3xl font-semibold">{messages.payments.title}</h2>
       <BalanceSummary expenses={expenses} actorId={actorId} />
-      <button className="secondary-button" onClick={resource.retry}>
+      <button lang="es" className="secondary-button" onClick={resource.retry}>
         {messages.payments.refresh}
       </button>
       {pending.length === 0 ? (

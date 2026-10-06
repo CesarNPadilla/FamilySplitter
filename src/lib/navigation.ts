@@ -1,14 +1,16 @@
 import { useSyncExternalStore } from 'react';
+import { appPath, siteHref } from './site-path';
 
 const navigationEvent = 'family:navigate';
 export function navigate(path: string, replace = false) {
+  const destination = siteHref(path);
   if (
-    window.location.pathname === path &&
+    window.location.pathname === destination &&
     !window.location.search &&
     !window.location.hash
   )
     return;
-  window.history[replace ? 'replaceState' : 'pushState'](null, '', path);
+  window.history[replace ? 'replaceState' : 'pushState'](null, '', destination);
   window.dispatchEvent(new Event(navigationEvent));
 }
 function subscribe(callback: () => void) {
@@ -22,7 +24,7 @@ function subscribe(callback: () => void) {
 export function usePath() {
   return useSyncExternalStore(
     subscribe,
-    () => window.location.pathname,
+    () => appPath(window.location.pathname),
     () => '/dashboard',
   );
 }

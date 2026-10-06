@@ -80,6 +80,7 @@ export function ExpenseCard({
             {messages.expenses.edit}
           </AppLink>
           <button
+            lang="es"
             type="button"
             className="secondary-button"
             onClick={() => setConfirming(true)}
@@ -94,6 +95,7 @@ export function ExpenseCard({
           <p>{messages.expenses.deleteConfirm}</p>
           <div className="mt-3 flex flex-wrap gap-3">
             <button
+              lang="es"
               type="button"
               className="secondary-button"
               disabled={deleting}
@@ -104,6 +106,7 @@ export function ExpenseCard({
                 : messages.expenses.confirmDelete}
             </button>
             <button
+              lang="es"
               type="button"
               className="secondary-button"
               disabled={deleting}

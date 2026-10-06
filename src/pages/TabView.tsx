@@ -24,7 +24,11 @@ export function TabView({
         <>
           <BalanceSummary expenses={resource.data.expenses} actorId={actorId} />
           <AppLink to="/settle">{messages.payments.title}</AppLink>
-          <button className="secondary-button" onClick={resource.retry}>
+          <button
+            lang="es"
+            className="secondary-button"
+            onClick={resource.retry}
+          >
             {messages.payments.refresh}
           </button>
           <header>

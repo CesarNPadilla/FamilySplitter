@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { navigate } from '../lib/navigation';
+import { siteHref } from '../lib/site-path';
 
 export function AppLink({
   to,
@@ -12,7 +13,7 @@ export function AppLink({
 }) {
   return (
     <a
-      href={to}
+      href={siteHref(to)}
       className={className}
       onClick={(event) => {
         if (
