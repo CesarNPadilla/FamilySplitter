@@ -37,9 +37,12 @@ try {
   };
   const members = await admin('/rest/v1/members?select=email');
   if (
-    !['member1@example.invalid', 'member2@example.invalid'].every((email) =>
-      members.some((member) => member.email === email),
-    )
+    ![
+      'member1@example.invalid',
+      'member2@example.invalid',
+      'member3@example.invalid',
+      'member4@example.invalid',
+    ].every((email) => members.some((member) => member.email === email))
   )
     throw new Error('Tests require demo seed member emails.');
   const users = (await admin('/auth/v1/admin/users?per_page=1000')).users;
@@ -50,6 +53,8 @@ try {
   for (const email of [
     'member1@example.invalid',
     'member2@example.invalid',
+    'member3@example.invalid',
+    'member4@example.invalid',
     ...outsiders,
   ]) {
     if (users.some((user) => user.email === email)) continue;

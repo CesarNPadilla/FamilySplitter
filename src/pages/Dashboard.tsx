@@ -36,6 +36,9 @@ export function Dashboard({ member }: { member: Member }) {
       <p className="mt-1 break-all text-slate-600 dark:text-slate-300">
         {member.email}
       </p>
+      <AppLink to="/settle" className="secondary-button mt-4 inline-flex">
+        {messages.payments.title}
+      </AppLink>
       <h3 className="mt-6 text-lg font-semibold">{messages.dashboard.tabs}</h3>
       {resource.status !== 'ready' ? (
         <ResourceNotice status={resource.status} retry={resource.retry} />

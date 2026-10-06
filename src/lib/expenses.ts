@@ -1,3 +1,4 @@
+import { computeBalances } from './balances';
 import { supabase } from './supabase';
 import { assertCents, assertCurrency, type Currency } from './money';
 import {
@@ -65,25 +66,34 @@ export async function loadTab(tabId: string): Promise<TabData> {
   const [tabResult, memberResult, expenseResult] = await Promise.all([
     api.from('expense_tabs').select('id,name').eq('id', tabId).single(),
     api.from('members').select('id,name').order('id'),
-    api
-      .from('expenses')
-      .select(
-        'id,tab_id,description,total_cents,currency,paid_by,created_by,split_mode,expense_shares(id,member_id,amount_cents,percentage::text,payor_marked_paid,payee_confirmed)',
-      )
-      .eq('tab_id', tabId)
-      .order('created_at', { ascending: false })
-      .order('id'),
+    readExpenses(tabId),
   ]);
   if (
     tabResult.error ||
     memberResult.error ||
-    expenseResult.error ||
     !tabResult.data ||
     !memberResult.data ||
-    !expenseResult.data
+    !expenseResult
   )
     throw new Error('Tab unavailable');
-  const expenses = expenseResult.data.map((row): SavedExpense => {
+  return {
+    tab: tabResult.data,
+    members: memberResult.data,
+    expenses: expenseResult,
+  };
+}
+export async function readExpenses(tabId?: string): Promise<SavedExpense[]> {
+  let query = client()
+    .from('expenses')
+    .select(
+      'id,tab_id,description,total_cents,currency,paid_by,created_by,split_mode,expense_shares(id,member_id,amount_cents,percentage::text,payor_marked_paid,payee_confirmed)',
+    );
+  if (tabId) query = query.eq('tab_id', tabId);
+  const { data, error } = await query
+    .order('created_at', { ascending: false })
+    .order('id');
+  if (error || !data) throw new Error('Expenses unavailable');
+  const expenses = data.map((row): SavedExpense => {
     assertCents(row.total_cents);
     assertCurrency(row.currency);
     if (!['equal', 'custom', 'percentage'].includes(row.split_mode))
@@ -116,8 +126,36 @@ export async function loadTab(tabId: string): Promise<TabData> {
         ),
     };
   });
-  return { tab: tabResult.data, members: memberResult.data, expenses };
+  // Fail through the resource error state instead of rendering unsafe aggregates.
+  computeBalances(
+    expenses,
+    expenses.flatMap((expense) =>
+      expense.shares.map((share) => ({ ...share, expenseId: expense.id })),
+    ),
+  );
+  return expenses;
 }
+export async function loadLedger() {
+  const [expenses, members] = await Promise.all([
+    readExpenses(),
+    client().from('members').select('id,name').order('id'),
+  ]);
+  if (members.error || !members.data) throw new Error('Members unavailable');
+  return { expenses, members: members.data };
+}
+export async function updatePayment(
+  shareId: string,
+  action: 'mark' | 'confirm',
+) {
+  const { error } = await client().rpc(
+    action === 'mark' ? 'mark_paid' : 'confirm_received',
+    { share_id: shareId },
+  );
+  if (error?.code === '42501' || error?.code === 'P0002')
+    throw new ExpenseWriteDenied();
+  if (error) throw new Error('Payment update failed');
+}
+
 export function canManageExpense(
   expense: Pick<SavedExpense, 'createdBy' | 'paidBy'>,
   memberId: string,

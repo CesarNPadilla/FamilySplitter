@@ -4,6 +4,7 @@ import { loadTab } from '../lib/expenses';
 import { useResource } from '../lib/use-resource';
 import { AppLink } from '../components/AppLink';
 import { ResourceNotice } from '../components/ResourceNotice';
+import { BalanceSummary } from '../components/BalanceSummary';
 import { ExpenseCard } from '../components/ExpenseCard';
 
 export function TabView({
@@ -21,6 +22,11 @@ export function TabView({
         <ResourceNotice status={resource.status} retry={resource.retry} />
       ) : (
         <>
+          <BalanceSummary expenses={resource.data.expenses} actorId={actorId} />
+          <AppLink to="/settle">{messages.payments.title}</AppLink>
+          <button className="secondary-button" onClick={resource.retry}>
+            {messages.payments.refresh}
+          </button>
           <header>
             <h2 className="break-words text-3xl font-semibold">
               {resource.data.tab.name}

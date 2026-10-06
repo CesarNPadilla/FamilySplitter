@@ -1,8 +1,8 @@
 {
   "app": {
     "eyebrow": "Shared expenses, made clear",
-    "title": "Family Splitter",
-    "description": "A shared space for five family members to track travel and property expenses, with separate USD and MXN balances."
+    "title": "Familia Nieto. Cuentas Claras",
+    "description": "Un espacio compartido para dar seguimiento de los gastos compartidos, con saldos separados en USD y MXN"
   },
   "auth": {
     "loginTitle": "Sign in to your family",
@@ -87,5 +87,26 @@
     "unknownMember": "Select only family members.",
     "customInvalid": "Enter valid amounts for every selected member that add up exactly to the total.",
     "percentageInvalid": "Enter nonnegative percentages for every selected member that add up exactly to 100."
+  },
+  "payments": {
+    "title": "Settle up",
+    "balances": "Outstanding balances",
+    "owed": "You owe",
+    "owedTo": "Owed to you",
+    "note": "Balances include payments awaiting confirmation. USD and MXN stay separate; obligations are not cancelled against each other.",
+    "mark": "I paid",
+    "confirm": "Received",
+    "saving": "Updating�",
+    "failed": "We could not update this payment. Reload the latest shares and try again.",
+    "denied": "This payment is no longer available to you. Reload to check the latest shares.",
+    "refresh": "Refresh payments",
+    "empty": "You have no outstanding payments.",
+    "to": "To",
+    "from": "From",
+    "statuses": {
+      "to-be-paid": "To be paid",
+      "awaiting-confirmation": "Awaiting confirmation",
+      "settled": "Settled"
+    }
   }
 }

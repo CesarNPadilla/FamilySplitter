@@ -3,6 +3,7 @@ import {
   test,
   type APIRequestContext,
   type Page,
+  type Browser,
 } from '@playwright/test';
 import { messages } from '../../src/i18n';
 
@@ -62,6 +63,7 @@ async function requestAndFollow(
 test('real auth, expense CRUD, exact splits, persistence, and outsider denial', async ({
   page,
   request,
+  browser,
 }, testInfo) => {
   if (!process.env.TEST_RUN_ID)
     throw new Error('Run through npm run test:auth:local.');
@@ -92,6 +94,7 @@ test('real auth, expense CRUD, exact splits, persistence, and outsider denial', 
     page.getByRole('heading', { name: messages.dashboard.title }),
   ).toBeVisible();
   // Exercise real expense reads/writes before signing out (Phase 4).
+  await verifyPayments(page, request, browser, testInfo.project.name);
   await verifyExpenses(page, testInfo.project.name);
   await page
     .getByRole('button', { name: messages.auth.signOut, exact: true })
@@ -315,4 +318,101 @@ async function verifyExpenses(page: Page, project: string) {
   await expect(
     page.getByRole('heading', { name: messages.dashboard.title }),
   ).toBeVisible();
+}
+
+async function verifyPayments(
+  page: Page,
+  request: APIRequestContext,
+  browser: Browser,
+  project: string,
+) {
+  const actor = project === 'mobile' ? 2 : 1;
+  const recipient = project === 'mobile' ? 4 : 3;
+  const tabId = '00000000-0000-0000-0000-000000000101';
+  const title = `phase4-${process.env.TEST_RUN_ID}-${project}-two-step`;
+  await page.goto(`/tabs/${tabId}/new`);
+  await page
+    .getByLabel(messages.expenses.description, { exact: true })
+    .fill(title);
+  await page
+    .getByLabel(messages.expenses.amount, { exact: true })
+    .fill('12.34');
+  await page
+    .getByLabel(messages.expenses.paidBy, { exact: true })
+    .selectOption(`00000000-0000-0000-0000-00000000000${recipient}`);
+  await page
+    .getByRole('button', { name: messages.expenses.save, exact: true })
+    .click();
+  const card = page.getByRole('article', { name: title });
+  await expect(
+    card.getByText(messages.payments.statuses['to-be-paid']),
+  ).toBeVisible();
+  await card
+    .getByRole('button', { name: messages.payments.mark, exact: true })
+    .click();
+  await expect(
+    card.getByText(messages.payments.statuses['awaiting-confirmation']),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    card.getByText(messages.payments.statuses['awaiting-confirmation']),
+  ).toBeVisible();
+  const context = await browser.newContext({
+    baseURL: 'http://127.0.0.1:5173',
+    ...(project === 'mobile'
+      ? {
+          viewport: { width: 390, height: 844 },
+          isMobile: true,
+          hasTouch: true,
+        }
+      : {}),
+  });
+  try {
+    const other = await context.newPage();
+    await other.goto('/login');
+    await requestAndFollow(
+      other,
+      request,
+      `member${recipient}@example.invalid`,
+    );
+    await expect(
+      other.getByRole('heading', { name: messages.dashboard.title }),
+    ).toBeVisible();
+    await other.goto('/settle');
+    const pending = other.getByRole('article', {
+      name: `${title}: Member ${actor}`,
+    });
+    await expect(pending.getByText('USD 12.34', { exact: true })).toBeVisible();
+    await expect(
+      pending.getByRole('button', {
+        name: messages.payments.mark,
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await pending
+      .getByRole('button', { name: messages.payments.confirm, exact: true })
+      .click();
+    await expect(pending).toHaveCount(0);
+    await other.reload();
+    await expect(pending).toHaveCount(0);
+    await page.getByRole('button', { name: messages.payments.refresh }).click();
+    await expect(
+      card.getByText(messages.payments.statuses.settled),
+    ).toBeVisible();
+    await expect(
+      card.getByRole('button', { name: messages.payments.mark, exact: true }),
+    ).toHaveCount(0);
+    await card
+      .getByRole('button', { name: messages.expenses.delete, exact: true })
+      .click();
+    await card
+      .getByRole('button', { name: messages.expenses.confirmDelete })
+      .click();
+    await expect(card).toHaveCount(0);
+    await other
+      .getByRole('button', { name: messages.auth.signOut, exact: true })
+      .click();
+  } finally {
+    await context.close();
+  }
 }

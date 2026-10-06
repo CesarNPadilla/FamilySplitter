@@ -111,7 +111,7 @@ async function family(page: Page, actor = 0) {
       .get('tab_id')
       ?.slice(3);
     return route.fulfill({
-      json: state.rows.filter((row) => row.tab_id === tabId),
+      json: state.rows.filter((row) => !tabId || row.tab_id === tabId),
     });
   });
   await page.route('**/rest/v1/rpc/save_expense', (route) => {
@@ -400,4 +400,113 @@ test('a tab-list load failure can retry into the empty state', async ({
   failing = false;
   await page.getByRole('button', { name: messages.auth.retry }).click();
   await expect(page.getByText(messages.dashboard.empty)).toBeVisible();
+});
+
+test('payment permissions, two-step balances, reload, and settle-up screen', async ({
+  page,
+}) => {
+  const state = await family(page, 1);
+  let fail = true;
+  await page.route('**/rest/v1/rpc/mark_paid', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ share_id: 'share-0-1' });
+    if (fail) return route.fulfill({ status: 403, json: { code: '42501' } });
+    state.rows[0].expense_shares[1].payor_marked_paid = true;
+    return route.fulfill({ status: 204 });
+  });
+  await page.goto('/settle');
+  const balances = page.getByRole('region', {
+    name: messages.payments.balances,
+  });
+  await expect(balances).toContainText('You owe: USD 1,000.00');
+  await expect(balances).toContainText('You owe: MXN 1,000.00');
+  const card = page.getByRole('article', {
+    name: 'Disney universal: Member 2',
+  });
+  await expect(
+    card.getByText(messages.payments.statuses['to-be-paid']),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: messages.payments.confirm, exact: true }),
+  ).toHaveCount(0);
+  await card
+    .getByRole('button', { name: messages.payments.mark, exact: true })
+    .click();
+  await expect(card.getByRole('alert')).toHaveText(messages.payments.denied);
+  fail = false;
+  await card
+    .getByRole('button', { name: messages.payments.mark, exact: true })
+    .click();
+  await expect(
+    card.getByText(messages.payments.statuses['awaiting-confirmation']),
+  ).toBeVisible();
+  await expect(
+    card.getByRole('button', { name: messages.payments.mark, exact: true }),
+  ).toHaveCount(0);
+  await expect(balances).toContainText('You owe: USD 1,000.00');
+  await page.reload();
+  await expect(
+    card.getByText(messages.payments.statuses['awaiting-confirmation']),
+  ).toBeVisible();
+  state.rows[0].expense_shares[1].payee_confirmed = true;
+  await page.getByRole('button', { name: messages.payments.refresh }).click();
+  await expect(card).toHaveCount(0);
+  await expect(balances).toContainText('You owe: USD 0.00');
+  await expect(balances).toContainText('You owe: MXN 1,000.00');
+});
+
+test('only the recipient can confirm a marked share and self shares stay settled', async ({
+  page,
+}) => {
+  const state = await family(page);
+  await page.route('**/rest/v1/rpc/confirm_received', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ share_id: 'share-0-1' });
+    state.rows[0].expense_shares[1].payee_confirmed = true;
+    return route.fulfill({ status: 204 });
+  });
+  await page.goto(`/tabs/${tabs[0].id}`);
+  const card = page.getByRole('article', { name: 'Disney universal' });
+  await expect(card.getByText(messages.payments.statuses.settled)).toHaveCount(
+    1,
+  );
+  await expect(
+    card.getByRole('button', { name: messages.payments.mark, exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    card.getByRole('button', { name: messages.payments.confirm, exact: true }),
+  ).toHaveCount(0);
+  state.rows[0].expense_shares[1].payor_marked_paid = true;
+  await page.getByRole('button', { name: messages.payments.refresh }).click();
+  await card
+    .getByRole('button', { name: messages.payments.confirm, exact: true })
+    .click();
+  await expect(card.getByText(messages.payments.statuses.settled)).toHaveCount(
+    2,
+  );
+  await expect(
+    page.getByRole('region', { name: messages.payments.balances }),
+  ).toContainText('Owed to you: USD 0.00');
+});
+
+test('an uninvolved member has zero separate balances and no settlement actions', async ({
+  page,
+}) => {
+  await family(page, 4);
+  await page.goto('/settle');
+  await expect(page.getByText(messages.payments.empty)).toBeVisible();
+  const balances = page.getByRole('region', {
+    name: messages.payments.balances,
+  });
+  await expect(balances).toContainText('You owe: USD 0.00');
+  await expect(balances).toContainText('Owed to you: MXN 0.00');
+  await expect(
+    page.getByRole('button', { name: messages.payments.mark, exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: messages.payments.confirm, exact: true }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
 });

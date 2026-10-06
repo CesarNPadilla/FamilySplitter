@@ -8,6 +8,7 @@ import {
   type SavedExpense,
   type FamilyMember,
 } from '../lib/expenses';
+import { PaymentShare } from './PaymentShare';
 import { AppLink } from './AppLink';
 
 export function ExpenseCard({
@@ -63,15 +64,14 @@ export function ExpenseCard({
         className="mt-4 divide-y divide-slate-200 dark:divide-slate-700"
       >
         {expense.shares.map((share) => (
-          <li
+          <PaymentShare
             key={share.id}
-            className="flex flex-wrap justify-between gap-2 py-3"
-          >
-            <span className="break-words">{name(share.memberId)}</span>
-            <span className="tabular-nums">
-              {formatCents(share.amountCents, expense.currency)}
-            </span>
-          </li>
+            share={share}
+            expense={expense}
+            actorId={actorId}
+            name={name(share.memberId)}
+            onChanged={onDeleted}
+          />
         ))}
       </ul>
       {canManageExpense(expense, actorId) && (

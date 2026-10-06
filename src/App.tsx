@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AuthProvider } from './components/AuthProvider';
 import { messages } from './i18n';
 import { useAuth } from './lib/auth-context';
+import { Settle } from './pages/Settle';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
 import { navigate, parseRoute, usePath } from './lib/navigation';
@@ -60,6 +61,8 @@ function AuthRoutes() {
       {state.status === 'ready' &&
         (route.page === 'dashboard' ? (
           <Dashboard key={path} member={state.member} />
+        ) : route.page === 'settle' ? (
+          <Settle actorId={state.member.id} />
         ) : route.page === 'tab' ? (
           <TabView key={path} tabId={route.tabId} actorId={state.member.id} />
         ) : route.page === 'add' || route.page === 'edit' ? (

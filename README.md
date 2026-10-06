@@ -1,6 +1,6 @@
 # Family Splitter
 
-A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–4 provide the development foundation, core logic, database security, magic-link authentication, and expense tabs/forms. Payment confirmation screens come in Phase 5. No PWA, service worker, or manifest is included. Hosting remains undecided.
+A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–4 provide the development foundation, core logic, database security, magic-link authentication, expense tabs/forms, and two-step payment confirmation with per-currency balances. No PWA, service worker, or manifest is included. Hosting remains undecided.
 
 ## Local setup
 
@@ -49,7 +49,7 @@ npm run test:db
 ## Structure
 
 - `src/lib/`: pure split/balance/money modules, the Supabase client, and auth helpers/context.
-- `src/i18n/`: English dictionary consumed by components; Spanish can be added later.
+- `src/i18n/`: English dictionary consumed by components; the app title and introduction use the requested Spanish wording. Full Spanish translation can be added later.
 - `src/components/` and `src/pages/`: auth provider, login, dashboard, tab view, and shared expense editor/cards.
 - `supabase/migrations/` and `supabase/seed.sql`: schema, security RPCs, and local demo data.
 - `tests/unit/`, `tests/e2e/`, and `tests/database/`: Vitest, Playwright, and SQL checks.
@@ -146,11 +146,23 @@ Edit/delete controls are shown only to the creator or the member who paid, and m
 
 Protected routes are `/dashboard`, `/tabs/:tabId`, `/tabs/:tabId/new`, and `/tabs/:tabId/expenses/:expenseId/edit`. Navigation uses browser history with real link URLs, including back/forward, deep links, and reloads. Auth restoration retains the requested protected path after member verification. No routing or other dependency was added.
 
-Verified examples: `Disney universal`, USD 2,000.00 split between two members produces USD 1,000.00 each; `House title`, MXN 3,000.00 split between three members produces MXN 1,000.00 each. USD 100.00 among three participants with the payer excluded yields USD 33.34 / 33.33 / 33.33 in stable member-ID order. The local desktop/mobile suite adds these examples through the real form, reloads saved data, edits splits, and deletes its fixtures. The mocked suite also checks duplicate selection prevention, invalid custom/percentage inputs, denied edits, changed permissions at save time, deletion cancellation, error retry, and mobile overflow/touch-target sizes. Payment buttons, status pills, and balance/settle screens remain Phase 5 work.
+Verified examples: `Disney universal`, USD 2,000.00 split between two members produces USD 1,000.00 each; `House title`, MXN 3,000.00 split between three members produces MXN 1,000.00 each. USD 100.00 among three participants with the payer excluded yields USD 33.34 / 33.33 / 33.33 in stable member-ID order. The local desktop/mobile suite adds these examples through the real form, reloads saved data, edits splits, and deletes its fixtures. The mocked suite also checks duplicate selection prevention, invalid custom/percentage inputs, denied edits, changed permissions at save time, deletion cancellation, error retry, and mobile overflow/touch-target sizes. Phase 5 adds the payment buttons, status pills, and balance/settle screens.
+
+## Payment confirmation (Phase 5)
+
+The main page and browser title now say **Familia Nieto. Cuentas Claras**, with the requested Spanish introduction. The remaining UI stays in English and all visible component text continues to come from the dictionary.
+
+Each saved share displays To be paid, Awaiting confirmation, or Settled. Only that share's payor sees **I paid** for an unmarked external obligation; only the expense payee sees **Received** after it is marked. The payee's own participating share is already settled and has no payment action. Buttons call the existing `mark_paid` and `confirm_received` RPCs with the share ID; database authorization remains authoritative. No schema changes or new dependencies were needed.
+
+Tab pages show your outstanding balances for that tab, separately in USD and MXN. **Settle up** from the dashboard or a tab opens `/settle`, showing your balances across all tabs plus each outstanding share owed by you or to you, its recipient, currency, expense, status, and permitted action. These are gross obligations, without cancellation or currency conversion. Awaiting payments count until both flags are true. Zero balances display explicitly. Expense/share reads use one embedded query, and unsafe balance aggregates fail through the page's retryable error state.
+
+After a successful action the current page reloads its balances and statuses. **Refresh payments** or a browser reload fetches changes made by another member; live subscriptions are outside this phase. Failed actions retain a retryable button and show a message. Permission/stale-share failures advise reloading the latest shares. Financial edits still recreate shares and reset confirmations through the existing expense RPC.
+
+The desktop/mobile mocked suite checks action permissions, errors, status transitions, self shares, reloads, currency separation, and removal of settled items. `npm run test:auth:local` also signs in two distinct members in separate browser contexts on each viewport: one creates and marks a USD 12.34 obligation, the recipient signs in by magic link and confirms it from Settle up, and the payor refreshes to see Settled. It deletes only its uniquely named expense afterward. The test runner provisions demo members 1�4 if missing and removes only accounts it created.
 
 ## Review workflow
 
-One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, Phase 3 on `phase-3-auth`, and Phase 4 on `phase-4-tabs-expenses`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
+One branch and PR per phase. Run lint, type-check, tests, and build; commit; then stop for review before starting the next phase. Phase 0 is on `phase-0-setup`, Phase 1 on `phase-1-core-logic`, Phase 2 on `phase-2-database-security`, Phase 3 on `phase-3-auth`, Phase 4 on `phase-4-tabs-expenses`, and Phase 5 on `phase-5-payment-confirmation`. You will push the local code to https://github.com/CesarNPadilla/FamilySplitter and open each phase's PR. If the preceding phase has not merged, use it as the PR base; otherwise use the branch containing the merged work. Local checks do not establish GitHub CI status.
 
 ## Dependency purposes
 

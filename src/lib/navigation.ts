@@ -27,10 +27,11 @@ export function usePath() {
   );
 }
 export type AppRoute =
-  | { page: 'dashboard' | 'unknown' }
+  | { page: 'dashboard' | 'settle' | 'unknown' }
   | { page: 'tab' | 'add'; tabId: string }
   | { page: 'edit'; tabId: string; expenseId: string };
 export function parseRoute(path: string): AppRoute {
+  if (path === '/settle') return { page: 'settle' };
   if (path === '/dashboard') return { page: 'dashboard' };
   const id =
     '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
