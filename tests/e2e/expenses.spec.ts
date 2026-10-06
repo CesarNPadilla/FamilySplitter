@@ -111,24 +111,36 @@ test('custom and percentage validation blocks invalid saves and selection stays 
     .fill('100.00');
   await page.getByRole('checkbox', { name: 'Member 2', exact: true }).check();
   await page.getByLabel(messages.expenses.splitMode).selectOption('custom');
-  await page.getByLabel('Member 1 amount', { exact: true }).fill('75');
-  await page.getByLabel('Member 2 amount', { exact: true }).fill('24.99');
+  await page
+    .getByLabel(`Member 1 ${messages.expenses.customAmount}`, { exact: true })
+    .fill('75');
+  await page
+    .getByLabel(`Member 2 ${messages.expenses.customAmount}`, { exact: true })
+    .fill('24.99');
   await expect(page.getByText(messages.validation.customInvalid)).toBeVisible();
   await expect(
     page.getByRole('button', { name: messages.expenses.save, exact: true }),
   ).toBeDisabled();
   expect(state.writes).toHaveLength(0);
-  await page.getByLabel('Member 2 amount', { exact: true }).fill('25');
+  await page
+    .getByLabel(`Member 2 ${messages.expenses.customAmount}`, { exact: true })
+    .fill('25');
   await expect(
     page.getByRole('list', { name: messages.expenses.preview }),
   ).toContainText('USD 75.00');
   await page.getByLabel(messages.expenses.splitMode).selectOption('percentage');
-  await page.getByLabel('Member 1 percentage (%)', { exact: true }).fill('50');
-  await page.getByLabel('Member 2 percentage (%)', { exact: true }).fill('49');
+  await page
+    .getByLabel(`Member 1 ${messages.expenses.percentage}`, { exact: true })
+    .fill('50');
+  await page
+    .getByLabel(`Member 2 ${messages.expenses.percentage}`, { exact: true })
+    .fill('49');
   await expect(
     page.getByRole('button', { name: messages.expenses.save, exact: true }),
   ).toBeDisabled();
-  await page.getByLabel('Member 2 percentage (%)', { exact: true }).fill('50');
+  await page
+    .getByLabel(`Member 2 ${messages.expenses.percentage}`, { exact: true })
+    .fill('50');
   await expect(
     page
       .getByRole('list', { name: messages.expenses.preview })
@@ -259,8 +271,8 @@ test('payment permissions, two-step balances, reload, and settle-up screen', asy
   const balances = page.getByRole('region', {
     name: messages.payments.balances,
   });
-  await expect(balances).toContainText('You owe: USD 1,000.00');
-  await expect(balances).toContainText('You owe: MXN 1,000.00');
+  await expect(balances).toContainText('Debes: USD 1,000.00');
+  await expect(balances).toContainText('Debes: MXN 1,000.00');
   const card = page.getByRole('article', {
     name: 'Disney universal: Member 2',
   });
@@ -284,7 +296,7 @@ test('payment permissions, two-step balances, reload, and settle-up screen', asy
   await expect(
     card.getByRole('button', { name: messages.payments.mark, exact: true }),
   ).toHaveCount(0);
-  await expect(balances).toContainText('You owe: USD 1,000.00');
+  await expect(balances).toContainText('Debes: USD 1,000.00');
   await page.reload();
   await expect(
     card.getByText(messages.payments.statuses['awaiting-confirmation']),
@@ -292,8 +304,8 @@ test('payment permissions, two-step balances, reload, and settle-up screen', asy
   state.rows[0].expense_shares[1].payee_confirmed = true;
   await page.getByRole('button', { name: messages.payments.refresh }).click();
   await expect(card).toHaveCount(0);
-  await expect(balances).toContainText('You owe: USD 0.00');
-  await expect(balances).toContainText('You owe: MXN 1,000.00');
+  await expect(balances).toContainText('Debes: USD 0.00');
+  await expect(balances).toContainText('Debes: MXN 1,000.00');
 });
 
 test('only the recipient can confirm a marked share and self shares stay settled', async ({
@@ -326,7 +338,7 @@ test('only the recipient can confirm a marked share and self shares stay settled
   );
   await expect(
     page.getByRole('region', { name: messages.payments.balances }),
-  ).toContainText('Owed to you: USD 0.00');
+  ).toContainText('Te deben: USD 0.00');
 });
 
 test('an uninvolved member has zero separate balances and no settlement actions', async ({
@@ -338,8 +350,8 @@ test('an uninvolved member has zero separate balances and no settlement actions'
   const balances = page.getByRole('region', {
     name: messages.payments.balances,
   });
-  await expect(balances).toContainText('You owe: USD 0.00');
-  await expect(balances).toContainText('Owed to you: MXN 0.00');
+  await expect(balances).toContainText('Debes: USD 0.00');
+  await expect(balances).toContainText('Te deben: MXN 0.00');
   await expect(
     page.getByRole('button', { name: messages.payments.mark, exact: true }),
   ).toHaveCount(0);

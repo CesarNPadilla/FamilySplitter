@@ -257,10 +257,10 @@ async function verifyExpenses(page: Page, project: string) {
   await page.getByRole('checkbox', { name: 'Member 1', exact: true }).check();
   await page.getByRole('checkbox', { name: 'Member 2', exact: true }).check();
   await page
-    .getByLabel('Member 1 percentage (%)', { exact: true })
+    .getByLabel(`Member 1 ${messages.expenses.percentage}`, { exact: true })
     .fill('99.999999999999999999');
   await page
-    .getByLabel('Member 2 percentage (%)', { exact: true })
+    .getByLabel(`Member 2 ${messages.expenses.percentage}`, { exact: true })
     .fill('0.000000000000000001');
   await page
     .getByRole('button', { name: messages.expenses.save, exact: true })
@@ -268,14 +268,22 @@ async function verifyExpenses(page: Page, project: string) {
   const card = page.getByRole('article', { name: title });
   await card.getByRole('link', { name: messages.expenses.edit }).click();
   await expect(
-    page.getByLabel('Member 1 percentage (%)', { exact: true }),
+    page.getByLabel(`Member 1 ${messages.expenses.percentage}`, {
+      exact: true,
+    }),
   ).toHaveValue('99.999999999999999999');
   await expect(
-    page.getByLabel('Member 2 percentage (%)', { exact: true }),
+    page.getByLabel(`Member 2 ${messages.expenses.percentage}`, {
+      exact: true,
+    }),
   ).toHaveValue('0.000000000000000001');
   await page.getByLabel(messages.expenses.splitMode).selectOption('custom');
-  await page.getByLabel('Member 1 amount', { exact: true }).fill('75.00');
-  await page.getByLabel('Member 2 amount', { exact: true }).fill('25.00');
+  await page
+    .getByLabel(`Member 1 ${messages.expenses.customAmount}`, { exact: true })
+    .fill('75.00');
+  await page
+    .getByLabel(`Member 2 ${messages.expenses.customAmount}`, { exact: true })
+    .fill('25.00');
   await expect(
     page.getByRole('list', { name: messages.expenses.preview }),
   ).toContainText('USD 75.00');
@@ -289,12 +297,16 @@ async function verifyExpenses(page: Page, project: string) {
     card.getByRole('list', { name: messages.expenses.shares }),
   ).toContainText('USD 25.00');
   await card.getByRole('link', { name: messages.expenses.edit }).click();
-  await expect(page.getByLabel('Member 1 amount', { exact: true })).toHaveValue(
-    '75.00',
-  );
-  await expect(page.getByLabel('Member 2 amount', { exact: true })).toHaveValue(
-    '25.00',
-  );
+  await expect(
+    page.getByLabel(`Member 1 ${messages.expenses.customAmount}`, {
+      exact: true,
+    }),
+  ).toHaveValue('75.00');
+  await expect(
+    page.getByLabel(`Member 2 ${messages.expenses.customAmount}`, {
+      exact: true,
+    }),
+  ).toHaveValue('25.00');
   await page.getByRole('link', { name: messages.expenses.cancel }).click();
   await card
     .getByRole('button', { name: messages.expenses.delete, exact: true })

@@ -1,0 +1,112 @@
+{
+  "app": {
+    "eyebrow": "Gastos compartidos, simples!",
+    "title": "Cuentas Claras  - Familia Nieto",
+    "description": "Un espacio para dar seguimiento de los gastos compartidos"
+  },
+  "auth": {
+    "loginTitle": "Inicia sesión",
+    "loginDescription": "Usa tu correo registrado para recibir un enlace de acceso. No necesitas contraseña.",
+    "emailLabel": "Correo electrónico",
+    "sendLink": "Enviar enlace de acceso",
+    "sending": "Enviando...",
+    "genericResponse": "Si este correo está registrado con tu familia, recibirás un enlace de acceso en unos momentos.",
+    "loading": "Verificando tu sesión…",
+    "unconfiguredTitle": "El acceso aún no está configurado",
+    "unconfigured": "Contacta a la persona que está configurando la cuenta familiar.",
+    "invalidLink": "Este enlace de acceso no es válido o ya venció. Solicita uno nuevo.",
+    "denied": "Esta cuenta no tiene acceso. Cierra sesión y usa tu correo registrado con la familia.",
+    "unavailable": "No pudimos verificar tu acceso. Intenta de nuevo.",
+    "retry": "Intentar de nuevo",
+    "signedInAs": "Sesión iniciada como",
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión...",
+    "signOutFailed": "No pudimos cerrar tu sesión. Intenta de nuevo."
+  },
+  "dashboard": {
+    "title": "Tu espacio familiar",
+    "tabs": "Pestañas de gastos",
+    "empty": "Aún no hay pestañas. Crea una para un viaje o una propiedad compartida.",
+    "newTab": "Nombre de la nueva pestaña",
+    "createTab": "Crear pestaña",
+    "createFailed": "No pudimos crear esta pestaña. Intenta de nuevo."
+  },
+  "expenses": {
+    "loading": "Cargando los gastos familiares…",
+    "loadFailed": "No pudimos cargar esta página. Intenta de nuevo.",
+    "add": "Agregar gasto",
+    "editTitle": "Editar gasto",
+    "empty": "Aún no hay gastos en esta pestaña.",
+    "currencyNote": "Cada gasto conserva su moneda. Los saldos en USD y MXN se mantienen separados.",
+    "backToTabs": "Volver a las pestañas",
+    "backToTab": "Volver a la pestaña",
+    "description": "Descripción",
+    "amount": "Monto total",
+    "currency": "Moneda",
+    "currencies": {
+      "USD": "USD",
+      "MXN": "MXN"
+    },
+    "paidBy": "Pagado por",
+    "splitMode": "Forma de dividir",
+    "modes": {
+      "equal": "Partes iguales",
+      "custom": "Montos personalizados",
+      "percentage": "Porcentajes"
+    },
+    "participants": "¿Quiénes comparten este gasto?",
+    "participantsHint": "Selecciona a cada integrante una sola vez. Quien pagó no tiene que participar.",
+    "customAmount": "monto",
+    "percentage": "porcentaje (%)",
+    "preview": "Vista previa de la división",
+    "total": "Total",
+    "shares": "Montos por participante",
+    "save": "Guardar gasto",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando...",
+    "saveFailed": "No pudimos guardar este gasto. Tus datos siguen aquí; intenta de nuevo.",
+    "writeDenied": "Solo quien creó el gasto o quien pagó puede editarlo o eliminarlo.",
+    "edit": "Editar gasto",
+    "delete": "Eliminar gasto",
+    "deleteConfirm": "¿Eliminar este gasto y todos sus montos por participante? Esta acción no se puede deshacer.",
+    "confirmDelete": "Sí, eliminar gasto",
+    "deleting": "Eliminando...",
+    "deleteFailed": "No pudimos eliminar este gasto. Intenta de nuevo.",
+    "cancel": "Cancelar",
+    "resetWarning": "Cambiar el monto, la moneda, quien pagó o la división reinicia la confirmación de los pagos. Si quien pagó participa, su propio monto queda saldado.",
+    "unknownMember": "Integrante desconocido",
+    "notFound": "No se encontró esta página."
+  },
+  "validation": {
+    "descriptionRequired": "Escribe una descripción para ver la división.",
+    "amountInvalid": "Escribe un monto de cero o mayor, con hasta dos decimales, sin comas ni símbolos de moneda.",
+    "currencyInvalid": "Elige USD o MXN.",
+    "payeeRequired": "Elige al integrante que pagó.",
+    "participantsRequired": "Selecciona al menos a un participante.",
+    "duplicateMember": "Cada integrante puede aparecer solo una vez.",
+    "unknownMember": "Selecciona únicamente a integrantes de la familia.",
+    "customInvalid": "Escribe montos válidos para todos los participantes que sumen exactamente el total.",
+    "percentageInvalid": "Escribe porcentajes de cero o mayores para todos los participantes que sumen exactamente 100."
+  },
+  "payments": {
+    "title": "Saldar cuentas",
+    "balances": "Saldos pendientes",
+    "owed": "Debes",
+    "owedTo": "Te deben",
+    "note": "Los saldos incluyen pagos pendientes de confirmación. USD y MXN se mantienen separados; las deudas no se compensan entre sí.",
+    "mark": "Ya pagué",
+    "confirm": "Recibido",
+    "saving": "Actualizando...",
+    "failed": "No pudimos actualizar este pago. Actualiza los pagos e intenta de nuevo.",
+    "denied": "Este pago ya no está disponible para ti. Actualiza para consultar los montos actuales.",
+    "refresh": "Actualizar pagos",
+    "empty": "No tienes pagos pendientes.",
+    "to": "Para",
+    "from": "De",
+    "statuses": {
+      "to-be-paid": "Por pagar",
+      "awaiting-confirmation": "Pendiente de confirmación",
+      "settled": "Saldado"
+    }
+  }
+}

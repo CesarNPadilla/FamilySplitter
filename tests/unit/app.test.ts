@@ -5,7 +5,7 @@ import { App } from '../../src/App';
 import { messages } from '../../src/i18n';
 
 describe('auth entry page', () => {
-  it('renders the English dictionary and a semantic page heading', () => {
+  it('renders the Spanish dictionary and a semantic page heading', () => {
     const markup = renderToStaticMarkup(createElement(App));
     expect(markup).toContain(messages.app.title);
     expect(markup).toContain(messages.auth.unconfiguredTitle);

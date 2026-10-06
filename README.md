@@ -50,7 +50,7 @@ npm run test:pages
 ## Structure
 
 - `src/lib/`: pure split/balance/money modules, the Supabase client, and auth helpers/context.
-- `src/i18n/`: English dictionary consumed by components; the app title and introduction use the requested Spanish wording. Full Spanish translation can be added later.
+- `src/i18n/`: Spanish dictionary consumed by components, including labels, instructions, validation, payment statuses, and errors.
 - `src/components/` and `src/pages/`: auth provider, login, dashboard, tab view, and shared expense editor/cards.
 - `supabase/migrations/` and `supabase/seed.sql`: schema, security RPCs, and local demo data.
 - `tests/unit/`, `tests/e2e/`, and `tests/database/`: Vitest, Playwright, and SQL checks.
@@ -135,11 +135,11 @@ The SDK persists sessions and refreshes tokens. It processes the standard SPA ma
 
 Auth-state callbacks schedule database requests outside the SDK Auth lock, following [Supabase callback guidance](https://supabase.com/docs/reference/javascript/auth-onauthstatechange). Request generations prevent late membership results from restoring protected content after sign-out or a session change. Invalid links get a dictionary-based recovery message, transient membership errors get retry, and sign-out clears this browser's SDK session (including its other tabs). It does not sign out other devices. No privileged key enters the frontend. Backend RLS/RPC checks remain authoritative even if a browser manipulates local storage or the URL.
 
-The real local test deliberately provisions outsider Auth fixtures through the admin API to prove they still cannot enter the app or read expense rows. Normal provisioning must create only allowlisted family accounts. All visible component text comes from the English dictionary. Hosting and custom SMTP remain Phase 6 decisions/work.
+The real local test deliberately provisions outsider Auth fixtures through the admin API to prove they still cannot enter the app or read expense rows. Normal provisioning must create only allowlisted family accounts. All visible component text comes from the Spanish dictionary. GitHub Pages and custom SMTP are configured; see docs/deployment.md for release verification.
 
 ## Tabs and expenses (Phase 4)
 
-After signing in, the dashboard lists shared tabs and lets members create a tab. Open a tab to see its expenses and each participant's exact share in that expense's currency. Add an expense with a description, decimal amount, USD/MXN currency, and the member who paid. Equal splitting is the default; select participants using large checkbox labels. A participant appears only once, and selecting the person who paid is optional. The live preview shows exact per-person amounts and the total before saving. Invalid amounts, missing participants, non-matching custom totals, and percentage totals other than 100 disable saving with English dictionary guidance.
+After signing in, the dashboard lists shared tabs and lets members create a tab. Open a tab to see its expenses and each participant's exact share in that expense's currency. Add an expense with a description, decimal amount, USD/MXN currency, and the member who paid. Equal splitting is the default; select participants using large checkbox labels. A participant appears only once, and selecting the person who paid is optional. The live preview shows exact per-person amounts and the total before saving. Invalid amounts, missing participants, non-matching custom totals, and percentage totals other than 100 disable saving with Spanish dictionary guidance.
 
 Custom amounts are entered as decimal currency values and parsed to integer cents. Percentages remain decimal strings. Saved percentages are selected using PostgREST's [`percentage::text` column cast](https://postgrest.org/en/stable/references/api/tables_views.html#casting-columns), preserving long fractional inputs when reopening an editor; no schema change was needed. Expense/share rows are read with a single embedded query so one response contains the expense and its shares from the same database snapshot. Writes use only `create_expense_tab`, `save_expense`, and `delete_expense`; payment flags are never submitted by the form.
 
@@ -151,7 +151,7 @@ Verified examples: `Disney universal`, USD 2,000.00 split between two members pr
 
 ## Payment confirmation (Phase 5)
 
-The main page and browser title now say **Cuentas Claras - Familia Nieto**, with the requested Spanish introduction and tagline. Action buttons and navigation labels are in Spanish; the remaining UI text stays in English. All visible component text continues to come from the dictionary. Backend identifiers, RPCs, and schema remain in English.
+The main page and browser title now say **Cuentas Claras - Familia Nieto**, with the requested Spanish introduction and tagline. All interface text, including labels, guidance, errors, and payment statuses, is in Spanish. All visible component text continues to come from the dictionary. Backend identifiers, RPCs, and schema remain in English.
 
 Each saved share displays To be paid, Awaiting confirmation, or Settled. Only that share's payor sees **I paid** for an unmarked external obligation; only the expense payee sees **Received** after it is marked. The payee's own participating share is already settled and has no payment action. Buttons call the existing `mark_paid` and `confirm_received` RPCs with the share ID; database authorization remains authoritative. No schema changes or new dependencies were needed.
 
@@ -163,7 +163,7 @@ The desktop/mobile mocked suite checks action permissions, errors, status transi
 
 ## Polish and deployment (Phase 6)
 
-Mobile panels use tighter padding at narrow widths, text wraps for long labels, and Spanish header text has language annotations. Existing loading, empty, error, and retry states remain dictionary-driven; Spanish actions coexist with the English informational UI. The backend stays in English.
+Mobile panels use tighter padding at narrow widths, text wraps for long labels, and Spanish header text has language annotations. Existing loading, empty, error, and retry states remain dictionary-driven; All informational UI and actions are in Spanish. The backend stays in English.
 
 GitHub Pages builds use `/FamilySplitter/`, including navigation and magic-link redirects. The build includes the static 404 fallback for nested routes; those initial HTTP requests return 404 while the app renders normally. `npm run test:pages` tests the production output under that base at desktop/mobile sizes. GitHub CI and the deployment workflow include this suite alongside existing checks. No dependencies or schema changes were introduced.
 
@@ -185,3 +185,7 @@ One branch and PR per phase. Run lint, type-check, tests, and build; commit; the
 - Prettier: consistent source formatting.
 - Vitest: unit tests.
 - Playwright: desktop and mobile browser tests.
+
+## Future updates
+
+The repository uses a single `main` branch. Commit and push updates to `main`; GitHub Actions verifies the changes and publishes GitHub Pages after checks pass. Backend identifiers and database schema remain in English.
