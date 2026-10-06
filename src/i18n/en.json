@@ -1,0 +1,11 @@
+{
+  "app": {
+    "eyebrow": "Shared expenses, made clear",
+    "title": "Family Splitter",
+    "description": "A shared space for five family members to track travel and property expenses, with separate USD and MXN balances."
+  },
+  "setup": {
+    "title": "The foundation is ready",
+    "description": "Expense splitting, email sign-in, and payment confirmations are coming in the next phases."
+  }
+}
