@@ -150,7 +150,7 @@ Verified examples: `Disney universal`, USD 2,000.00 split between two members pr
 
 ## Payment confirmation (Phase 5)
 
-The main page and browser title now say **Familia Nieto. Cuentas Claras**, with the requested Spanish introduction. The remaining UI stays in English and all visible component text continues to come from the dictionary.
+The main page and browser title now say **Cuentas Claras - Familia Nieto**, with the requested Spanish introduction and tagline. Action buttons and navigation labels are in Spanish; the remaining UI text stays in English. All visible component text continues to come from the dictionary. Backend identifiers, RPCs, and schema remain in English.
 
 Each saved share displays To be paid, Awaiting confirmation, or Settled. Only that share's payor sees **I paid** for an unmarked external obligation; only the expense payee sees **Received** after it is marked. The payee's own participating share is already settled and has no payment action. Buttons call the existing `mark_paid` and `confirm_received` RPCs with the share ID; database authorization remains authoritative. No schema changes or new dependencies were needed.
 
