@@ -1,6 +1,6 @@
 # Family Splitter
 
-A mobile-first browser website for five family members sharing travel and property expenses. Phases 0–5 provide the development foundation, core logic, database security, magic-link authentication, expense tabs/forms, and two-step payment confirmation with per-currency balances. No PWA, service worker, or manifest is included. GitHub Pages is the chosen host; Phase 6 deployment preparation is in progress. See [deployment instructions](docs/deployment.md).
+A mobile-first browser website for shared family travel and property expenses. Production starts with three members with equal permissions; the local demo keeps five test members. Phases 0–5 provide the development foundation, core logic, database security, magic-link authentication, expense tabs/forms, and two-step payment confirmation with per-currency balances. No PWA, service worker, or manifest is included. GitHub Pages is the chosen host; Phase 6 deployment preparation is in progress. See [deployment instructions](docs/deployment.md).
 
 ## Local setup
 

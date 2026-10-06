@@ -29,7 +29,11 @@ GitHub Pages does not provide a server-side SPA rewrite. A direct nested URL suc
 
 ## Production Supabase
 
-Apply the checked-in migration to the production project. Do not use the local demo seed or test Auth bootstrap. Add the five real member names and normalized emails through trusted admin access and pre-provision those Auth accounts without passwords, following the README's provisioning instructions. Disable public signup and anonymous signin, keep email signin enabled, and keep email confirmation enabled. The browser continues to use `shouldCreateUser: false` and the existing membership/RLS checks.
+Apply the checked-in migration to the production project. Do not use the local demo seed or test Auth bootstrap. Start with three members: Cesar Nieto, Ivan Nieto, and Alejandro Nieto. Cesar is the primary contact only; all three have identical permissions. No admin role or schema change is needed. Participant choices come from the members table, so the UI supports three without code changes.
+
+The private local file `supabase/production-members.local.sql` contains the approved names/emails. It is Git-ignored so personal email addresses are not published with the code. Run it as the project owner in this production project's SQL editor after the migration. It inserts missing members by email, preserves existing IDs/Auth links, and stops without changes if unrelated members or demo rows already exist. Do not run it against the local five-member test fixtures.
+
+Then pre-provision these three Auth accounts without passwords through trusted admin access, following the README's provisioning instructions. The allowlist SQL alone does not create Auth users or send email. Disable public signup and anonymous signin, keep email signin enabled, and keep email confirmation enabled. The browser continues to use `shouldCreateUser: false` and the existing membership/RLS checks.
 
 In **Authentication → URL Configuration**, set both the **Site URL** and an exact **Redirect URL** to:
 
